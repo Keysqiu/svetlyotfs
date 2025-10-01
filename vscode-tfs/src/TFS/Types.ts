@@ -53,8 +53,6 @@ export interface Changeset {
     items: string[];
 }
 
-<<<<<<< HEAD
-=======
 // Blame information for a single line
 export interface BlameInfo {
     lineNumber: number;
@@ -71,7 +69,6 @@ export interface BlameResult {
     timestamp: Date;
 }
 
->>>>>>> b5f1d075e6ade18c3604ffd846e00406554efdc3
 export function getDescriptionText(state: TfStatus){
 switch(state){
     case TfStatus.AddEncoding:

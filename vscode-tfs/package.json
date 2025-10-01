@@ -1,6 +1,6 @@
 {
     "name": "TFS",
-    "version": "3.0.5",
+    "version": "3.0.7",
     "description": "TFS Visual Studio Code integration.",
     "license": "SEE LICENSE IN LICENSE",
     "main": "./out/extension",
@@ -45,7 +45,7 @@
                 {
                     "id": "pending-changes",
                     "title": "TFServer (TFS)",
-                    "icon": "res/tfs.png"
+                    "icon": "res/image.png"
                 }
             ]
         },
@@ -55,7 +55,7 @@
                     "id": "pendingChanges",
                     "contents": "",
                     "name": "Staged Changes",
-                    "icon": "res/tfs.png",
+                    "icon": "res/image.png",
                     "contextualTitle": "Pending Changes",
                     "type": "tree"
                 },
@@ -63,7 +63,7 @@
                     "id": "currentFileHistory",
                     "contents": "",
                     "name": "Current file changes",
-                    "icon": "res/tfs.png",
+                    "icon": "res/image.png",
                     "contextualTitle": "History",
                     "type": "tree"
                 }
@@ -250,7 +250,7 @@
         "email": "svetn001@gmail.com",
         "url": "https://github.com/nsvetoslav"
     },
-    "publisher": "SvetoslavIvanovNikolov",
+    "publisher": "Svetoslav Ivanov Nikolov",
     "repository": {
         "type": "git",
         "url": "https://github.com/nsvetoslav/svetlyotfs.git"

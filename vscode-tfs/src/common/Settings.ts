@@ -37,23 +37,36 @@ export class Settings {
         return Settings._workspaceInfo;
     }
 
-    public setWorkspaceInfo(){
-        TFSCommandExecutor.getInstance().getWorkspaces().then((setting) => {
+    public async setWorkspaceInfo(): Promise<void> {
+        try {
+            const setting = await TFSCommandExecutor.getInstance().getWorkspaces();
             if(!setting || setting.workspaces.length <= 0)
                 return;
-            
-            this.setActiveTfsWorkspace(setting.workspaces[0]);
-            
-            Settings._workspaceInfo = setting;
 
-        }).catch((error) => {
+            // Check if there's a previously selected workspace saved
+            const savedWorkspace = this.getActiveTfsWorkspace<string>();
+            let activeWorkspace: string;
+
+            if (savedWorkspace && setting.workspaces.includes(savedWorkspace)) {
+                // Use the previously selected workspace if it's still available
+                activeWorkspace = savedWorkspace;
+                console.log(`TFS: Using previously selected workspace: ${activeWorkspace}`);
+            } else {
+                // Use the first available workspace as default
+                activeWorkspace = setting.workspaces[0];
+                console.log(`TFS: Using default workspace: ${activeWorkspace}`);
+            }
+
+            this.setActiveTfsWorkspace(activeWorkspace);
+            Settings._workspaceInfo = setting;
+        } catch (error) {
             console.log("Error setting default TFS workspace.", error);
-        });
+        }
     }
 
     public setActiveTfsWorkspace(workspaceName: string){
-        if(this.getActiveTfsWorkspace<string>() === undefined){
-            Settings._cache.setValue(SettingNames.ActiveWorkspace.toString(), workspaceName)
-        }
+        // Always update the active workspace, not just if undefined
+        Settings._cache.setValue(SettingNames.ActiveWorkspace.toString(), workspaceName);
+        console.log(`TFS: Active workspace changed to: ${workspaceName}`);
     }
 }

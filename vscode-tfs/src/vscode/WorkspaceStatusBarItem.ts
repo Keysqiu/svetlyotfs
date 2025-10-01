@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 import { PendingChangesTreeView } from './PendingChangesTreeView';
 import { Settings } from '../common/Settings';
+import { TFSStatusCache } from '../common/LocalCache';
 
 export class WorkspacesStatusBarItem {
     private static instance: WorkspacesStatusBarItem;
@@ -46,8 +47,21 @@ export class WorkspacesStatusBarItem {
 
         const selectedWorkspace = await vscode.window.showQuickPick(Settings.getInstance().getWorkspaceInfo().workspaces, quickpickOptions);
         if(selectedWorkspace){
-            Settings.getInstance().setActiveTfsWorkspace(selectedWorkspace.toString());    
-            PendingChangesTreeView.getInstance().refresh();
+            const workspaceName = selectedWorkspace.toString();
+            console.log(`TFS: User selected workspace: ${workspaceName}`);
+
+            // Update the active workspace
+            Settings.getInstance().setActiveTfsWorkspace(workspaceName);
+
+            // Clear any cached data that depends on the workspace
+            // This ensures fresh data is loaded for the new workspace
+            TFSStatusCache.getInstance().clear();
+            PendingChangesTreeView.getInstance().refreshImmediate();
+
+            // Update status bar text to show current workspace
+            this._statusBarItem.text = `[TFS]: ${workspaceName}`;
+
+            vscode.window.showInformationMessage(`TFS: Switched to workspace "${workspaceName}"`);
         }
     }
 
@@ -56,6 +70,11 @@ export class WorkspacesStatusBarItem {
     }
 
     public update() {
-        // PendingChangesSCM.getInstance().refresh();
+        const activeWorkspace = Settings.getInstance().getActiveTfsWorkspace<string>();
+        if (activeWorkspace) {
+            this._statusBarItem.text = `[TFS]: ${activeWorkspace}`;
+        } else {
+            this._statusBarItem.text = `[TFS]: Workspaces`;
+        }
     }
 }
