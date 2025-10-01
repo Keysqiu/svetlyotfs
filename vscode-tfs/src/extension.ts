@@ -73,6 +73,78 @@ function registerHandlers(context: vscode.ExtensionContext){
     return recentOperations.has(key);
   };
 
+  // Check if file is in an ignored directory (build outputs, dependencies, etc.)
+  const isIgnoredDirectory = (uri: vscode.Uri): boolean => {
+    const pathParts = uri.fsPath.split(/[/\\]/);
+    const ignoredDirs = [
+      'out', 'dist', 'build', 'bin', 'obj', 'target',
+      'node_modules', '.git', '.svn', '.hg',
+      '.vscode', '.vs', '.idea', '.DS_Store',
+      'packages', 'bower_components', 'jspm_packages',
+      '.net', 'temp', 'tmp', 'cache', 'logs'
+    ];
+
+    return pathParts.some(part =>
+      ignoredDirs.includes(part.toLowerCase()) ||
+      part.startsWith('.') && ignoredDirs.includes(part.toLowerCase())
+    );
+  };
+
+  // Check if file is currently open/active in VSCode (indicates development workflow)
+  const isFileActiveInVSCode = (uri: vscode.Uri): boolean => {
+    // Check if file is currently open in an editor
+    const openTabs = vscode.window.tabGroups.all.flatMap(tg => tg.tabs);
+    const isOpen = openTabs.some(tab =>
+      tab.input instanceof vscode.TabInputText &&
+      tab.input.uri.fsPath === uri.fsPath
+    );
+
+    // Check if file is in the active workspace
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+    const isInWorkspace = workspaceFolder !== undefined;
+
+    return isOpen || isInWorkspace;
+  };
+
+  // Check if file appears to be a temporary or system-generated file that shouldn't be added to TFS
+  const isTemporaryOrSystemFile = (uri: vscode.Uri): boolean => {
+    const fileName = path.basename(uri.fsPath);
+    const extension = path.extname(uri.fsPath).toLowerCase();
+
+    // Extensions that indicate temporary/system files
+    const tempExtensions = [
+      '.tmp', '.temp', '.bak', '.backup', '.old', '.orig',
+      '.vsidx', '.vspscc', '.vssscc', '.suo', '.user',
+      '.cache', '.log', '.pid', '.lock', '.swp', '.swo'
+    ];
+
+    // Check for temporary extensions
+    if (tempExtensions.includes(extension)) {
+      return true;
+    }
+
+    // Check for GUID-like filenames (8-4-4-4-12 pattern)
+    const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\.[a-zA-Z0-9]+)?$/i;
+    if (guidPattern.test(fileName)) {
+      return true;
+    }
+
+    // Check for files starting with temporary prefixes
+    const tempPrefixes = ['~$', 'temp', 'tmp', 'cache', 'tempfile'];
+    if (tempPrefixes.some(prefix => fileName.toLowerCase().startsWith(prefix))) {
+      return true;
+    }
+
+    // Check for files in temporary directories
+    const pathParts = uri.fsPath.split(/[/\\]/);
+    const tempDirs = ['temp', 'tmp', 'cache', 'temporary', '.tmp'];
+    if (pathParts.some(part => tempDirs.includes(part.toLowerCase()))) {
+      return true;
+    }
+
+    return false;
+  };
+
   // File system watcher for external file operations (Kilocode, other apps, etc.)
   const fileWatcher = vscode.workspace.createFileSystemWatcher('**/*');
   context.subscriptions.push(fileWatcher);
@@ -83,7 +155,19 @@ function registerHandlers(context: vscode.ExtensionContext){
       console.log(`TFS: Skipping duplicate create operation for: ${uri.fsPath}`);
       return;
     }
-    console.log(`TFS: File created externally: ${uri.fsPath}`);
+
+    if (isIgnoredDirectory(uri)) {
+      console.log(`TFS: Skipping create operation for ignored directory: ${uri.fsPath}`);
+      return;
+    }
+
+    // Skip temporary or system-generated files
+    if (isTemporaryOrSystemFile(uri)) {
+      console.log(`TFS: Skipping temporary/system file creation: ${uri.fsPath}`);
+      return;
+    }
+
+    console.log(`TFS: File created (active workflow): ${uri.fsPath}`);
     await ActionHandlers.createFiles([uri]);
     await PendingChangesTreeView.getInstance().refresh();
   });
@@ -94,38 +178,29 @@ function registerHandlers(context: vscode.ExtensionContext){
       console.log(`TFS: Skipping duplicate delete operation for: ${uri.fsPath}`);
       return;
     }
-    console.log(`TFS: File deleted externally: ${uri.fsPath}`);
+    if (isIgnoredDirectory(uri)) {
+      console.log(`TFS: Skipping delete operation for ignored directory: ${uri.fsPath}`);
+      return;
+    }
+    if (!isFileActiveInVSCode(uri)) {
+      console.log(`TFS: Skipping delete operation for inactive file: ${uri.fsPath}`);
+      return;
+    }
+    console.log(`TFS: File deleted (active workflow): ${uri.fsPath}`);
     await ActionHandlers.deleteFiles([uri]);
     await PendingChangesTreeView.getInstance().refresh();
   });
 
-  // Handle file changes from external sources (skip if recently handled by VSCode)
-  fileWatcher.onDidChange(async (uri) => {
-    if (isRecentOperation(uri, 'change')) {
-      console.log(`TFS: Skipping duplicate change operation for: ${uri.fsPath}`);
-      return;
-    }
-    console.log(`TFS: File changed externally: ${uri.fsPath}`);
-
-    // Check if file is already added to TFS (in "Add" state)
-    const isAdded = await TFSCommandExecutor.getInstance().checkIsAdded(uri);
-    if (isAdded) {
-      console.log(`TFS: File ${uri.fsPath} is already added to TFS, skipping checkout`);
-      await PendingChangesTreeView.getInstance().refresh();
-      return;
-    }
-
-    // Check if file is already checked out
-    const isCheckedOut = await TFSCommandExecutor.getInstance().checkIsCheckedOut(uri);
-    if (!isCheckedOut) {
-      await ActionHandlers.onSaveDocument(uri);
-    }
-    await PendingChangesTreeView.getInstance().refresh();
-  });
-
-  // Save document (VSCode internal saves)
+  // Save document (VSCode internal saves - only for active files)
   context.subscriptions.push(vscode.workspace.onWillSaveTextDocument( async (event) => {
-    return await ActionHandlers.onSaveDocument(event.document.uri)
+    // Skip files in ignored directories
+    if (isIgnoredDirectory(event.document.uri)) {
+      console.log(`TFS: Skipping save operation for ignored directory: ${event.document.uri.fsPath}`);
+      return;
+    }
+
+    console.log(`TFS: Handling save for active file: ${event.document.uri.fsPath}`);
+    return await ActionHandlers.onSaveDocument(event.document.uri);
   }));
 
   context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(async () => {
