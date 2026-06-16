@@ -1,6 +1,6 @@
 {
-    "name": "tfs-for-vscode",
-    "version": "3.0.7",
+    "name": "tfs-for-vscode-chinese",
+    "version": "3.0.8",
     "description": "TFS Visual Studio Code integration.",
     "license": "SEE LICENSE IN LICENSE",
     "main": "./out/extension",
@@ -259,7 +259,7 @@
         "url": "https://github.com/Keysqiu/svetlyotfs/issues"
     },
     "readmeFilename": "README.md",
-    "displayName": "TFS for VS Code (Chinese)",
+    "displayName": "TFS TFVC Chinese",
     "icon": "res/image.png",
     "galleryBanner": {
         "color": "#912a2a",

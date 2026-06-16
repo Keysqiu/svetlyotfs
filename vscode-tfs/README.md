@@ -119,4 +119,4 @@ Enjoy the freedom to use, modify, and share.
  
 ## ⭐ Support
  
-If the extension has improved your workflow, please consider leaving a review [here](https://marketplace.visualstudio.com/items?itemName=SvetoslavIvanovNikolov.svetlyo-tfs&ssr=false#review-details).
+If the extension has improved your workflow, please consider leaving a review [here](https://marketplace.visualstudio.com/items?itemName=keysqiu.tfs-for-vscode-chinese).
