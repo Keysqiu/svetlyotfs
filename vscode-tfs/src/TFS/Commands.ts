@@ -3,7 +3,7 @@ import * as path from 'path'
 import * as fs from 'fs'
 import { spawnSync } from "child_process"
 import * as iconv from 'iconv-lite';
-import { tf } from "./Spawn";
+import { tf, getSystemEncoding } from "./Spawn";
 import { WorkspaceInfo, BlameInfo, BlameResult, TfStatus } from "./Types";
 import { FileNode } from "../vscode/PendingChangesTreeView";
 import { Settings } from "../common/Settings";
@@ -372,11 +372,12 @@ export class TFSCommandExecutor {
             const args = ["annotate", Utilities.removeLeadingSlash(uri), "/noprompt"];
             const task = spawnSync(tfptPath, args, { encoding: 'buffer' });
 
-            if (task.stderr.toString().length > 0) {
-                throw new Error(task.stderr.toString());
+            if (task.stderr.length > 0) {
+                const encoding = getSystemEncoding();
+                throw new Error(iconv.decode(task.stderr, encoding));
             }
 
-            const outputString = iconv.decode(task.stdout, 'win1251');
+            const outputString = iconv.decode(task.stdout, getSystemEncoding());
 
             // Parse the annotate output to get changeset IDs
             const blameResult = this.parseAnnotateOutput(uri.fsPath, outputString);

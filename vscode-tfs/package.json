@@ -250,7 +250,7 @@
         "email": "svetn001@gmail.com",
         "url": "https://github.com/nsvetoslav"
     },
-    "publisher": "Svetoslav Ivanov Nikolov",
+    "publisher": "svetlyotfs",
     "repository": {
         "type": "git",
         "url": "https://github.com/nsvetoslav/svetlyotfs.git"
@@ -277,6 +277,7 @@
     ],
     "dependencies": {
         "fs-extra": "^11.2.0",
+        "iconv-lite": "^0.4.24",
         "json-file": "^0.1.0",
         "jsonfile": "^6.1.0",
         "xml2js": "^0.6.2"
