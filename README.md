@@ -66,21 +66,21 @@ After clicking the "Workspaces" button located on the left side of the status ba
 ## 💡 Feedback and Contributions
 Your feedback is essential to improve the extension!
 - **Report Issues or Suggest Features**:  
-  [Submit an issue](https://github.com/nsvetoslav/svetlyotfs/issues) on GitHub.
+  [Submit an issue](https://github.com/Keysqiu/svetlyotfs/issues) on GitHub.
 - **Contribute to Development**:  
   Fork the repository and submit a pull request to help enhance the extension.
 ---
  
 ## 📂 Source Code
  
-The source code is available on [GitHub](https://github.com/nsvetoslav/svetlyotfs).  
+The source code is available on [GitHub](https://github.com/Keysqiu/svetlyotfs).  
 Explore, contribute, and help refine this extension to make it even better.
  
 ---
  
 ## 📜 License
  
-This project is licensed under the [MIT License](https://github.com/nsvetoslav/svetlyotfs/blob/main/LICENCE).  
+This project is licensed under the [MIT License](https://github.com/Keysqiu/svetlyotfs/blob/main/LICENCE).  
 Enjoy the freedom to use, modify, and share.
  
 ---

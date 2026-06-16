@@ -1,5 +1,5 @@
 {
-    "name": "TFS",
+    "name": "tfs-for-vscode",
     "version": "3.0.7",
     "description": "TFS Visual Studio Code integration.",
     "license": "SEE LICENSE IN LICENSE",
@@ -244,22 +244,22 @@
             }
         ]
     },
-    "homepage": "https://github.com/nsvetoslav",
+    "homepage": "https://github.com/Keysqiu",
     "author": {
-        "name": "Svetoslav Nikolov",
-        "email": "svetn001@gmail.com",
-        "url": "https://github.com/nsvetoslav"
+        "name": "Keysqiu",
+        "email": "2586597832@qq.com",
+        "url": "https://github.com/Keysqiu"
     },
-    "publisher": "svetlyotfs",
+    "publisher": "keysqiu",
     "repository": {
         "type": "git",
-        "url": "https://github.com/nsvetoslav/svetlyotfs.git"
+        "url": "https://github.com/Keysqiu/svetlyotfs.git"
     },
     "bugs": {
-        "url": "https://github.com/nsvetoslav/svetlyotfs/issues"
+        "url": "https://github.com/Keysqiu/svetlyotfs/issues"
     },
     "readmeFilename": "README.md",
-    "displayName": "TFServer (TFS)",
+    "displayName": "TFS for VS Code (Chinese)",
     "icon": "res/image.png",
     "galleryBanner": {
         "color": "#912a2a",
