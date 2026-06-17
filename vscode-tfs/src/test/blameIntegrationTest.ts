@@ -5,34 +5,34 @@ import { BlameDecorationsProvider } from '../vscode/BlameDecorationsProvider';
 import { TFSCommandExecutor } from '../TFS/Commands';
 
 /**
- * Integration test for the blame feature
+ * 标注功能的集成测试
  */
 export async function runBlameIntegrationTest() {
-    // Get the active text editor
+    // 获取活动文本编辑器
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-        vscode.window.showErrorMessage('No active text editor found');
+        vscode.window.showErrorMessage('未找到活动文本编辑器');
         return;
     }
 
     try {
-        // Test BlameManager
+        // 测试 BlameManager
         const blameManager = BlameManager.getInstance();
-        assert.ok(blameManager, 'BlameManager should be instantiated');
-        assert.strictEqual(typeof blameManager.isEnabled(), 'boolean', 'isEnabled should return a boolean');
+        assert.ok(blameManager, 'BlameManager 应该被实例化');
+        assert.strictEqual(typeof blameManager.isEnabled(), 'boolean', 'isEnabled 应该返回布尔值');
 
-        // Test BlameDecorationsProvider
+        // 测试 BlameDecorationsProvider
         const decorationsProvider = BlameDecorationsProvider.getInstance();
-        assert.ok(decorationsProvider, 'BlameDecorationsProvider should be instantiated');
+        assert.ok(decorationsProvider, 'BlameDecorationsProvider 应该被实例化');
 
-        // Test TFSCommandExecutor
+        // 测试 TFSCommandExecutor
         const tfsExecutor = TFSCommandExecutor.getInstance();
-        assert.ok(tfsExecutor, 'TFSCommandExecutor should be instantiated');
+        assert.ok(tfsExecutor, 'TFSCommandExecutor 应该被实例化');
 
-        // Show success message
-        vscode.window.showInformationMessage('Blame feature integration test passed!');
+        // 显示成功消息
+        vscode.window.showInformationMessage('标注功能集成测试通过！');
     } catch (error: any) {
-        vscode.window.showErrorMessage(`Blame feature integration test failed: ${error.message}`);
-        console.error('Blame feature integration test failed:', error);
+        vscode.window.showErrorMessage(`标注功能集成测试失败: ${error.message}`);
+        console.error('标注功能集成测试失败:', error);
     }
 }

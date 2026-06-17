@@ -1,7 +1,7 @@
 {
     "name": "tfs-for-vscode-chinese",
-    "version": "3.0.8",
-    "description": "TFS Visual Studio Code integration.",
+    "version": "3.0.10",
+    "description": "TFS Visual Studio Code 集成扩展。",
     "license": "SEE LICENSE IN LICENSE",
     "main": "./out/extension",
     "scripts": {
@@ -44,7 +44,7 @@
             "activitybar": [
                 {
                     "id": "pending-changes",
-                    "title": "TFServer (TFS)",
+                    "title": "TFServer (TFS) 版本控制",
                     "icon": "res/image.png"
                 }
             ]
@@ -54,17 +54,17 @@
                 {
                     "id": "pendingChanges",
                     "contents": "",
-                    "name": "Staged Changes",
+                    "name": "已暂存的更改",
                     "icon": "res/image.png",
-                    "contextualTitle": "Pending Changes",
+                    "contextualTitle": "挂起的更改",
                     "type": "tree"
                 },
                 {
                     "id": "currentFileHistory",
                     "contents": "",
-                    "name": "Current file changes",
+                    "name": "当前文件更改记录",
                     "icon": "res/image.png",
-                    "contextualTitle": "History",
+                    "contextualTitle": "历史记录",
                     "type": "tree"
                 }
             ]
@@ -72,70 +72,82 @@
         "commands": [
             {
                 "command": "pendingChanges.openFile",
-                "title": "Open file",
+                "title": "打开文件",
                 "enablement": "true"
             },
             {
                 "command": "tfs.statusbar.workspace",
-                "title": "Workspace",
+                "title": "工作区",
                 "icon": "res/workspace.png",
                 "enablement": "true"
             },
             {
                 "command": "pendingChanges.compareFiles",
-                "title": "Compare with latest",
+                "title": "与最新版本比较",
                 "enablement": "true"
             },
             {
                 "command": "pendingChanges.undo",
-                "title": "Undo changes",
+                "title": "撤销更改",
                 "enablement": "true"
             },
             {
                 "command": "fileHistory.comapreWithAnother",
-                "title": "Compare",
+                "title": "比较",
                 "enablement": "true"
             },
             {
                 "command": "vscode-tfs.get",
-                "title": "Get",
-                "detail": "Get the latest version of files.",
+                "title": "获取最新版本",
+                "detail": "获取文件的最新版本。",
                 "category": "TFS"
             },
             {
                 "command": "vscode-tfs.checkout",
-                "title": "Check Out for Edit",
-                "detail": "Checks out a file and changes its pending change status to Edit.",
+                "title": "签出编辑",
+                "detail": "签出文件并将其挂起更改状态设置为编辑。",
                 "category": "TFS"
             },
             {
                 "command": "vscode-tfs.checkin",
-                "detail": "Checks in pending changes to TFS.",
-                "title": "Check In",
+                "detail": "将挂起的更改签入到 TFS。",
+                "title": "签入",
+                "category": "TFS"
+            },
+            {
+                "command": "pendingChanges.checkin",
+                "title": "签入所选文件",
+                "detail": "签入选中的文件到 TFS。",
+                "category": "TFS"
+            },
+            {
+                "command": "pendingChanges.checkinAll",
+                "title": "签入所有更改",
+                "detail": "签入所有挂起的更改到 TFS。",
                 "category": "TFS"
             },
             {
                 "command": "vscode-tfs.add",
-                "title": "Add",
-                "detail": "Adds files and folders to version control.",
+                "title": "添加",
+                "detail": "将文件和文件夹添加到版本控制。",
                 "category": "TFS"
             },
             {
                 "command": "vscode-tfs.delete",
-                "title": "Delete",
-                "detail": "Removes files and folders from the TFS and deletes them from the disk.",
+                "title": "删除",
+                "detail": "从 TFS 中移除文件和文件夹并从磁盘删除。",
                 "category": "TFS"
             },
             {
                 "command": "vscode-tfs.undo",
-                "title": "Undo Pending Changes",
-                "detail": "Discards one or more pending changes to files or folders.",
+                "title": "撤销挂起的更改",
+                "detail": "放弃一个或多个文件或文件夹的挂起更改。",
                 "category": "TFS"
             },
             {
                 "command": "vscode-tfs.openInBrowser",
-                "title": "Open in Browser",
-                "detail": "Opens files and folders in browser.",
+                "title": "在浏览器中打开",
+                "detail": "在浏览器中打开文件和文件夹。",
                 "category": "TFS"
             },
             {
@@ -145,44 +157,51 @@
             },
             {
                 "command": "vscode-tfs.testAnnotate",
-                "title": "Test Annotate Command",
-                "detail": "Test the annotate command output parsing.",
+                "title": "测试标注命令",
+                "detail": "测试标注命令输出解析。",
                 "category": "TFS"
             },
             {
                 "command": "vscode-tfs.testBlameIntegration",
-                "title": "Test Blame Integration",
-                "detail": "Test the blame feature integration.",
+                "title": "测试 Blame 集成",
+                "detail": "测试 Blame 功能集成。",
                 "category": "TFS"
             },
             {
                 "command": "vscode-tfs.showBlame",
-                "title": "TFS: Annotate",
-                "detail": "TFS: Annotate",
+                "title": "TFS: 标注",
+                "detail": "TFS: 标注",
                 "category": "TFS"
             }
         ],
         "menus": {
             "view/title": [
+                {
+                    "command": "pendingChanges.checkinAll",
+                    "when": "view == pendingChanges",
+                    "group": "navigation@1"
+                }
             ],
             "view/item/context": [
                 {
                     "command": "pendingChanges.compareFiles",
                     "when": "view == pendingChanges",
-                    "group": "navigation",
-                    "visible": true
+                    "group": "1_compare@1"
+                },
+                {
+                    "command": "pendingChanges.checkin",
+                    "when": "view == pendingChanges",
+                    "group": "2_checkin@2"
                 },
                 {
                     "command": "pendingChanges.undo",
                     "when": "view == pendingChanges",
-                    "group": "navigation",
-                    "visible": true
+                    "group": "3_undo@3"
                 },
                 {
                     "command": "fileHistory.comapreWithAnother",
                     "when": "view == currentFileHistory",
-                    "group": "navigation",
-                    "visible": true
+                    "group": "navigation"
                 }
             ],
             "commandPalette": [
@@ -211,28 +230,28 @@
         },
         "configuration": {
             "type": "object",
-            "title": "TFS configuration",
+            "title": "TFS 配置",
             "properties": {
                 "tfs.location": {
                     "type": "string",
-                    "description": "Path to the TFS command line client (tf.exe)."
+                    "description": "TFS 命令行客户端 (tf.exe) 的路径。"
                 },
                 "tfs.promptToCheckOut": {
                     "type": "boolean",
-                    "description": "True -> Checkout prompt in Team Foundation Server \n False -> Automatically check out files."
+                    "description": "True -> 在 Team Foundation Server 中弹出签出提示\n False -> 自动签出文件。"
                 },
                 "tfs.tfptLocation": {
                     "type": "string",
-                    "description": "Path to the TFS Power Tools command line client (tfpt.exe)."
+                    "description": "TFS Power Tools 命令行客户端 (tfpt.exe) 的路径。"
                 },
                 "tfs.blame.enabled": {
                     "type": "boolean",
-                    "description": "Enable/disable blame feature.",
+                    "description": "启用/禁用标注功能。",
                     "default": true
                 },
                 "tfs.blame.cacheSize": {
                     "type": "number",
-                    "description": "Maximum number of files to cache for blame information.",
+                    "description": "标注信息缓存的最大文件数。",
                     "default": 50
                 }
             }

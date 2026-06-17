@@ -19,10 +19,10 @@ export class Utilities {
     }
 
     static removeLastDirectory(uri: string): string {
-        const parts = uri.split('/'); 
-        parts.pop(); 
+        const parts = uri.split('/');
+        parts.pop();
         const newUriString = parts.join('/');
-        return newUriString; 
+        return newUriString;
     }
 
     static getGlobalStoragePath() {
@@ -31,7 +31,7 @@ export class Utilities {
 
     static generateTemporaryFileNameFromDate(datetime: string) {
         return path.join(Utilities.getGlobalStoragePath(), datetime);
-    } 
+    }
 
     static generateTemporaryFileNameFromUri(uri: FileNode) {
         return path.join(Utilities.getGlobalStoragePath(), path.basename(uri.filePath));
@@ -54,7 +54,7 @@ export class Utilities {
             const cleanedXml = xml.replace(/\r?\n|\r/g, '').trim();
             return await parser.parseStringPromise(cleanedXml);
           } catch (error: any) {
-            console.log("TFS: Parsing XML failed.\n Error:", error.message, `\n XML: ${xml}`);
+            console.log("TFS: XML 解析失败。\n 错误:", error.message, `\n XML: ${xml}`);
           }
 
           return undefined;
@@ -64,15 +64,15 @@ export class Utilities {
         const pendingChanges: PendingChange[] = [];
         const parsedObject = await Utilities.xmlToObject(xml);
         if (!parsedObject || !parsedObject.Status || !parsedObject.Status.PendingSet || !parsedObject.Status.PendingSet.PendingChanges || !parsedObject.Status.PendingSet.PendingChanges.PendingChange) {
-            return pendingChanges; 
+            return pendingChanges;
         }
-       
+
         if (Array.isArray(parsedObject.Status.PendingSet.PendingChanges.PendingChange)) {
             pendingChanges.push(...parsedObject.Status.PendingSet.PendingChanges.PendingChange);
         } else {
             pendingChanges.push(parsedObject.Status.PendingSet.PendingChanges.PendingChange);
         }
-    
+
         return pendingChanges;
     }
 
@@ -82,11 +82,11 @@ export class Utilities {
         const datePattern = /^Date:\s+(.+)/;
         const commentPattern = /^Comment:\s*(.+)/;
         const itemPattern = /^  edit\s+\$(.+)/;
-    
+
         let changesets: Changeset[] = [];
         let currentChangeset: Partial<Changeset> = {};
         let lines = tfOutput.split('\n');
-    
+
         for (let line of lines) {
             if (changesetPattern.test(line)) {
                 if (currentChangeset.changesetId) {
@@ -110,11 +110,11 @@ export class Utilities {
                 if (match) currentChangeset.items?.push(match[1].trim());
             }
         }
-    
+
         if (currentChangeset.changesetId) {
             changesets.push(currentChangeset as Changeset);
         }
-    
+
         return changesets;
     }
 }

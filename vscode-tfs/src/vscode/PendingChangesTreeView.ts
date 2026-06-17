@@ -13,8 +13,8 @@ export class PendingChangesTreeView implements vscode.TreeDataProvider<vscode.Tr
    private refreshTimeout: NodeJS.Timeout | null = null;
    private pendingRefresh = false;
    private virtualScrollEnabled = true;
-   private maxItemsPerFolder = 100; // Limit items per folder for virtual scrolling
-   private loadedItems = new Map<string, number>(); // Track loaded items per folder
+   private maxItemsPerFolder = 100; // 限制每个文件夹的条目数以支持虚拟滚动
+   private loadedItems = new Map<string, number>(); // 跟踪每个文件夹已加载的条目
 
    private constructor() {this.loadItems()}
 
@@ -30,14 +30,14 @@ export class PendingChangesTreeView implements vscode.TreeDataProvider<vscode.Tr
    readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
    /**
-    * Debounced refresh to prevent excessive UI updates
-    * Delays refresh by 200ms to batch multiple rapid changes
+    * 防抖刷新，防止过度的 UI 更新
+    * 延迟 200ms 以批量处理多个快速更改
     */
    refresh(): void {
      this.pendingRefresh = true;
 
      if (this.refreshTimeout) {
-       // Already scheduled, just mark as pending
+       // 已安排，标记为待处理
        return;
      }
 
@@ -47,11 +47,11 @@ export class PendingChangesTreeView implements vscode.TreeDataProvider<vscode.Tr
          this.pendingRefresh = false;
        }
        this.refreshTimeout = null;
-     }, 200); // 200ms debounce delay
+     }, 200); // 200ms 防抖延迟
    }
 
    /**
-    * Immediate refresh for critical updates
+    * 关键更新的即时刷新
     */
    refreshImmediate(): void {
      if (this.refreshTimeout) {
@@ -67,7 +67,7 @@ export class PendingChangesTreeView implements vscode.TreeDataProvider<vscode.Tr
         await this.getFolderNodes();
         this.refresh();
     } catch (error) {
-        vscode.window.showErrorMessage(`Error loading pending changes: ${error}`);
+        vscode.window.showErrorMessage(`加载挂起更改时出错: ${error}`);
     }
 }
   fileNodes : FileNode[] = [];
@@ -77,7 +77,7 @@ export class PendingChangesTreeView implements vscode.TreeDataProvider<vscode.Tr
   getFileNode(uri: vscode.Uri) {
     return this.fileNodes.find(element => {
       return element.filePath.toLowerCase() === Utilities.removeLeadingSlash(uri).toLowerCase()
-    }); 
+    });
   }
 
   getFolderNode(uri: vscode.Uri) {
@@ -88,21 +88,28 @@ export class PendingChangesTreeView implements vscode.TreeDataProvider<vscode.Tr
     });
   }
 
+  /**
+   * 获取所有挂起的更改（用于签入所有等功能）
+   */
+  getAllPendingChanges(): PendingChange[] {
+    return this.fileNodes.map(node => node.getPendingChange());
+  }
+
   private async getFolderNodes(): Promise<vscode.TreeItem[]> {
     try {
         this.folderNodesMap.clear();
-        this.fileNodes.length = 0; // FIXED: Proper array clearing
+        this.fileNodes.length = 0; // 修复: 正确清空数组
 
         const workspaceDir = Utilities.getWorkspaceDirectory();
         if (!workspaceDir) {
-            // No workspace directory available
+            // 没有可用的工作区目录
             return [];
         }
 
         const pendingChanges = await TFSCommandExecutor.getInstance().status(vscode.Uri.parse(workspaceDir));
         if(pendingChanges === undefined || pendingChanges.length === 0){
-            // No pending changes - show placeholder message
-            const placeholderNode = new PlaceholderNode('No pending changes');
+            // 没有挂起更改 - 显示占位符消息
+            const placeholderNode = new PlaceholderNode('没有挂起的更改');
             return [placeholderNode];
         }
 
@@ -117,35 +124,35 @@ export class PendingChangesTreeView implements vscode.TreeDataProvider<vscode.Tr
 
             const fileNode = new FileNode(path.basename(change.local), vscode.TreeItemCollapsibleState.None, change.local, change);
             this.fileNodes.push(fileNode);
-            folderNode.allChildren.push(fileNode); // Store in allChildren for virtual scrolling
+            folderNode.allChildren.push(fileNode); // 存储在 allChildren 中以支持虚拟滚动
         }
 
         this.folderNodesArray = Array.from(this.folderNodesMap.values());
         return this.folderNodesArray;
     } catch (error) {
-        // Log error but don't throw - allow view to show empty state
-        console.warn('Failed to load TFS pending changes:', error);
+        // 记录错误但不抛出 - 允许视图显示空状态
+        console.warn('加载 TFS 挂起更改失败:', error);
         return [];
     }
 }
-  
+
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
     return element;
   }
 
   getChildren(element?: vscode.TreeItem): Thenable<vscode.TreeItem[]> {
     if (!element) {
-        // Root level - return folder nodes (lazy loaded)
+        // 根级别 - 返回文件夹节点（懒加载）
         return this.getFolderNodes();
     } else if (element instanceof FolderNode) {
-        // Folder node - load children on demand with virtual scrolling
+        // 文件夹节点 - 按需加载子项，支持虚拟滚动
         return element.loadChildren(this.maxItemsPerFolder);
     } else if (element instanceof LoadMoreNode) {
-        // Load more items for the parent folder
+        // 为父文件夹加载更多条目
         const folderNode = this.folderNodesMap.get(element.folderPath);
         if (folderNode) {
             folderNode.loadMoreItems();
-            // Trigger refresh of the parent
+            // 触发父级刷新
             this.refresh();
         }
         return Promise.resolve([]);
@@ -155,18 +162,18 @@ export class PendingChangesTreeView implements vscode.TreeDataProvider<vscode.Tr
   }
 
   /**
-   * Lazy load children for a folder node
-   * This method can be called when a folder is expanded
+   * 懒加载文件夹节点的子项
+   * 此方法可在展开文件夹时调用
    */
   async loadFolderChildren(_folderNode: FolderNode): Promise<void> {
-    // For now, children are already loaded in getFolderNodes
-    // This method can be extended for more complex lazy loading scenarios
-    // such as loading subdirectories on demand
+    // 目前，子项已在 getFolderNodes 中加载
+    // 此方法可扩展用于更复杂的懒加载场景
+    // 如按需加载子目录
     return Promise.resolve();
   }
 
   /**
-   * Cleanup resources
+   * 清理资源
    */
   dispose(): void {
     if (this.refreshTimeout) {
@@ -187,25 +194,25 @@ class FolderNode extends vscode.TreeItem {
       public readonly folderPath: string,
       public readonly pendingChange: PendingChange
   ) {
-      super(label, vscode.TreeItemCollapsibleState.Collapsed); // Start collapsed for lazy loading
+      super(label, vscode.TreeItemCollapsibleState.Expanded); // 默认展开以显示所有更改
       this.iconPath = vscode.ThemeIcon.Folder;
       this.resourceUri = vscode.Uri.parse(folderPath);
       this.contextValue = 'checkedOut';
   }
 
   /**
-   * Load children on demand with virtual scrolling
+   * 按需加载子项，支持虚拟滚动
    */
   async loadChildren(maxItems?: number): Promise<vscode.TreeItem[]> {
      if (this.childrenLoaded) {
        return this.children;
      }
 
-     // Set children with virtual scrolling limit
+     // 设置子项，限制虚拟滚动数量
      const limit = maxItems || 100;
      this.children = this.allChildren.slice(0, limit);
 
-     // Add "Load More" item if there are more children
+     // 如果有更多子项，添加"加载更多"条目
      if (this.allChildren.length > limit) {
        this.hasMoreItems = true;
        const loadMoreItem = new LoadMoreNode(this.folderPath, this.allChildren.length - limit);
@@ -218,22 +225,22 @@ class FolderNode extends vscode.TreeItem {
   }
 
   /**
-   * Load additional items for virtual scrolling
+   * 加载更多条目以支持虚拟滚动
    */
   async loadMoreItems(increment: number = 50): Promise<void> {
     const currentCount = this.children.length - (this.hasMoreItems ? 1 : 0);
     const newCount = Math.min(currentCount + increment, this.allChildren.length);
     const newItems = this.allChildren.slice(currentCount, newCount);
 
-    // Remove "Load More" item temporarily
+    // 临时移除"加载更多"条目
     if (this.hasMoreItems) {
       this.children.pop();
     }
 
-    // Add new items
+    // 添加新条目
     this.children.push(...newItems);
 
-    // Add "Load More" item back if still needed
+    // 如果仍需，重新添加"加载更多"条目
     if (newCount < this.allChildren.length) {
       const loadMoreItem = new LoadMoreNode(this.folderPath, this.allChildren.length - newCount);
       this.children.push(loadMoreItem);
@@ -248,18 +255,17 @@ class FolderNode extends vscode.TreeItem {
 }
 
 /**
- * Special node for "Load More" functionality in virtual scrolling
+ * 虚拟滚动中的"加载更多"专用节点
  */
 class LoadMoreNode extends vscode.TreeItem {
   constructor(
     public readonly folderPath: string,
     public readonly remainingCount: number
   ) {
-    super(`Load ${remainingCount} more items...`, vscode.TreeItemCollapsibleState.None);
-    // this.iconPath = vscode.ThemeIcon.Folder; // Use default icon
+    super(`加载 ${remainingCount} 个更多条目...`, vscode.TreeItemCollapsibleState.None);
     this.command = {
       command: 'tfs.loadMoreItems',
-      title: 'Load More Items',
+      title: '加载更多条目',
       arguments: [folderPath]
     };
     this.contextValue = 'loadMore';
@@ -267,21 +273,20 @@ class LoadMoreNode extends vscode.TreeItem {
 }
 
 /**
- * Placeholder node for when no data is available
+ * 无数据时的占位符节点
  */
 class PlaceholderNode extends vscode.TreeItem {
   constructor(
     public readonly message: string
   ) {
     super(message, vscode.TreeItemCollapsibleState.None);
-    // this.iconPath = vscode.ThemeIcon.Info; // Use default icon
     this.contextValue = 'placeholder';
-    this.tooltip = 'Configure TFS settings to see pending changes';
+    this.tooltip = '配置 TFS 设置以查看挂起的更改';
   }
 }
 
 function strikethrough(text: string): string {
-  return text.split('').map(t => t + '\u0336').join('');
+  return text.split('').map(t => t + '̶').join('');
 }
 
 export class FileNode extends vscode.TreeItem {
@@ -296,21 +301,21 @@ export class FileNode extends vscode.TreeItem {
     this.tooltip = getDescriptionText(pendingChange.chg);
     this.command = {
       command: 'vscode.open',
-      title: 'Open File',
+      title: '打开文件',
       arguments: [vscode.Uri.file(this.filePath)],
   };
-    
- 
+
+
     if(Utilities.getWorkspaceDirectory() === undefined){
       return;
-    } 
+    }
     const relativePath = path.relative(Utilities.getWorkspaceDirectory(), filePath);
     const directoryPart = path.dirname(relativePath);
 
     this.iconPath = vscode.ThemeIcon.File;
-    this.resourceUri = this.toResourceUri(vscode.Uri.parse('_.'+ path.extname(filePath)), this.pendingChange);    
+    this.resourceUri = this.toResourceUri(vscode.Uri.parse('_.'+ path.extname(filePath)), this.pendingChange);
     this.description = directoryPart;
-    
+
     if(this.pendingChange.chg == TfStatus.Delete){
       this.label = strikethrough(this.label);
       this.description = strikethrough(this.description);
@@ -319,7 +324,7 @@ export class FileNode extends vscode.TreeItem {
     if(this.pendingChange.chg == TfStatus.Rename){
       this.description = this.pendingChange.srcitem;
     }
-    
+
     this.contextValue = 'checkedOut';
     this.label = this.label;
   }
@@ -328,11 +333,15 @@ export class FileNode extends vscode.TreeItem {
     return this.filePath;
   }
 
+  getPendingChange(): PendingChange {
+    return this.pendingChange;
+  }
+
   toResourceUri(uri: vscode.Uri, item : PendingChange ) {
     return uri.with({
       scheme: Schemes.FileChange,
       query: JSON.stringify(item),
     });
   }
-  
+
 }

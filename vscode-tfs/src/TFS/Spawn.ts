@@ -42,10 +42,10 @@ export async function tf(args: Array<string>, timeoutMs?: number): Promise<strin
   const tfPath: string | undefined = vscode.workspace.getConfiguration("tfs").get("location")
 
   if (!tfPath) {
-    throw new Error("tf.exe path is not configured")
+    throw new Error("tf.exe 路径未配置")
   }
 
-  const defaultTimeout = vscode.workspace.getConfiguration("tfs").get("commandTimeout", 30000); // 30 seconds default
+  const defaultTimeout = vscode.workspace.getConfiguration("tfs").get("commandTimeout", 30000); // 默认 30 秒
   const actualTimeout = timeoutMs || defaultTimeout;
 
   return new Promise((resolve, reject) => {
@@ -55,17 +55,17 @@ export async function tf(args: Array<string>, timeoutMs?: number): Promise<strin
     let stderr = Buffer.alloc(0);
     let timeoutId: NodeJS.Timeout;
 
-    // Set up timeout
+    // 设置超时
     if (actualTimeout > 0) {
       timeoutId = setTimeout(() => {
-        child.kill('SIGTERM'); // Try graceful termination first
+        child.kill('SIGTERM'); // 先尝试优雅终止
         setTimeout(() => {
           if (!child.killed) {
-            child.kill('SIGKILL'); // Force kill if still running
+            child.kill('SIGKILL'); // 如果仍在运行则强制终止
           }
-        }, 5000); // Wait 5 seconds before force kill
+        }, 5000); // 等待 5 秒后强制终止
 
-        reject(new Error(`TFS command timed out after ${actualTimeout}ms: tf ${args.join(' ')}`));
+        reject(new Error(`TFS 命令在 ${actualTimeout}ms 后超时: tf ${args.join(' ')}`));
       }, actualTimeout);
     }
 
@@ -78,14 +78,14 @@ export async function tf(args: Array<string>, timeoutMs?: number): Promise<strin
     });
 
     child.on('close', (code: number) => {
-      // Clear timeout if it exists
+      // 如果存在则清除超时
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
 
       if (code !== 0 || stderr.length > 0) {
         const encoding = getSystemEncoding();
-        const errorMsg = stderr.length > 0 ? iconv.decode(stderr, encoding) : `tf.exe exited with code ${code}`;
+        const errorMsg = stderr.length > 0 ? iconv.decode(stderr, encoding) : `tf.exe 退出码: ${code}`;
         reject(new Error(errorMsg));
         return;
       }
@@ -96,13 +96,11 @@ export async function tf(args: Array<string>, timeoutMs?: number): Promise<strin
     });
 
     child.on('error', (error: Error) => {
-      // Clear timeout if it exists
+      // 如果存在则清除超时
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      reject(new Error(`Failed to execute tf.exe: ${error.message}`));
+      reject(new Error(`执行 tf.exe 失败: ${error.message}`));
     });
   });
 }
-
-

@@ -53,7 +53,7 @@ export interface Changeset {
     items: string[];
 }
 
-// Blame information for a single line
+// 单行的标注信息
 export interface BlameInfo {
     lineNumber: number;
     changesetId: number;
@@ -62,7 +62,7 @@ export interface BlameInfo {
     content: string;
 }
 
-// Complete blame information for a file
+// 文件的完整标注信息
 export interface BlameResult {
     filePath: string;
     blameInfo: BlameInfo[];
@@ -72,35 +72,35 @@ export interface BlameResult {
 export function getDescriptionText(state: TfStatus){
 switch(state){
     case TfStatus.AddEncoding:
-        return 'The file is added';
+        return '文件已添加';
     case TfStatus.AddEditEncoding:
-        return 'The file is added';
+        return '文件已添加';
     case TfStatus.Add:
-        return 'The file is added';
+        return '文件已添加';
     case TfStatus.Branch:
-        return 'The file is branched';
+        return '文件已分支';
     case TfStatus.Delete:
-        return 'The file is deleted';
+        return '文件已删除';
     case TfStatus.Edit:
-        return 'The file is edited';
+        return '文件已编辑';
     case TfStatus.Encoding:
-        return 'The file is encoded';
+        return '文件已编码';
     case TfStatus.Lock:
-        return 'The file is locked';
+        return '文件已锁定';
     case TfStatus.Merge:
-        return 'The files is merged';
+        return '文件已合并';
     case TfStatus.None:
         return '';
     case TfStatus.Property:
-        return 'The file s a property';
+        return '文件属性';
     case TfStatus.Rename:
-        return 'The file is renamed';
+        return '文件已重命名';
     case TfStatus.Rollback:
-        return 'The file is rollbacked';
+        return '文件已回滚';
     case TfStatus.SourceRename:
-        return 'The file is source renamed';
+        return '文件已源重命名';
     case TfStatus.Undelete:
-        return 'The file is undeleted';
+        return '文件已取消删除';
 }
 
 }

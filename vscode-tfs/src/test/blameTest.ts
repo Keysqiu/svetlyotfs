@@ -1,23 +1,23 @@
 /**
- * Test file for blame functionality
- * This file is used to test the blame feature of the TFS extension
+ * 测试文件 - 用于测试标注功能
+ * 此文件用于测试 TFS 扩展的标注功能
  */
 
-// Simple function to test blame functionality
+// 用于测试标注功能的简单函数
 function helloWorld(): string {
     return "Hello, World!";
 }
 
-// Another function to test blame functionality
+// 用于测试标注功能的另一个函数
 function goodbyeWorld(): string {
     return "Goodbye, World!";
 }
 
-// Main function
+// 主函数
 function main(): void {
     console.log(helloWorld());
     console.log(goodbyeWorld());
 }
 
-// Run the main function
+// 运行主函数
 main();

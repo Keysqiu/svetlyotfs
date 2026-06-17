@@ -43,30 +43,30 @@ export class Settings {
             if(!setting || setting.workspaces.length <= 0)
                 return;
 
-            // Check if there's a previously selected workspace saved
+            // 检查是否有先前选择的工作区已保存
             const savedWorkspace = this.getActiveTfsWorkspace<string>();
             let activeWorkspace: string;
 
             if (savedWorkspace && setting.workspaces.includes(savedWorkspace)) {
-                // Use the previously selected workspace if it's still available
+                // 如果先前选择的工作区仍然可用，继续使用
                 activeWorkspace = savedWorkspace;
-                console.log(`TFS: Using previously selected workspace: ${activeWorkspace}`);
+                console.log(`TFS: 使用先前选择的工作区: ${activeWorkspace}`);
             } else {
-                // Use the first available workspace as default
+                // 使用第一个可用工作区作为默认值
                 activeWorkspace = setting.workspaces[0];
-                console.log(`TFS: Using default workspace: ${activeWorkspace}`);
+                console.log(`TFS: 使用默认工作区: ${activeWorkspace}`);
             }
 
             this.setActiveTfsWorkspace(activeWorkspace);
             Settings._workspaceInfo = setting;
         } catch (error) {
-            console.log("Error setting default TFS workspace.", error);
+            console.log("设置默认 TFS 工作区时出错。", error);
         }
     }
 
     public setActiveTfsWorkspace(workspaceName: string){
-        // Always update the active workspace, not just if undefined
+        // 始终更新活动工作区，而不仅仅是在未定义时
         Settings._cache.setValue(SettingNames.ActiveWorkspace.toString(), workspaceName);
-        console.log(`TFS: Active workspace changed to: ${workspaceName}`);
+        console.log(`TFS: 活动工作区已更改为: ${workspaceName}`);
     }
 }

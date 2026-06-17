@@ -13,7 +13,7 @@ export class TFSOperationQueue {
     }
 
     /**
-     * Set progress callback for reporting operation progress
+     * 设置进度回调以报告操作进度
      */
     setProgressCallback(callback: (message: string, increment?: number) => void): void {
         this.progressCallback = callback;
@@ -34,33 +34,33 @@ export class TFSOperationQueue {
     }
 
     /**
-     * Cancel all pending operations
+     * 取消所有待处理的操作
      */
     cancelAll(): void {
         this.cancelled = true;
 
-        // Reject all queued operations
+        // 拒绝所有排队的操作
         while (this.queue.length > 0) {
             const operation = this.queue.shift()!;
-            operation.reject(new Error('Operation cancelled'));
+            operation.reject(new Error('操作已取消'));
         }
     }
 
     /**
-     * Cancel specific operation by ID
+     * 按 ID 取消特定操作
      */
     cancelOperation(id: string): boolean {
         const index = this.queue.findIndex(op => op.id === id);
         if (index !== -1) {
             const operation = this.queue.splice(index, 1)[0];
-            operation.reject(new Error('Operation cancelled'));
+            operation.reject(new Error('操作已取消'));
             return true;
         }
         return false;
     }
 
     /**
-     * Get queue status
+     * 获取队列状态
      */
     getStatus() {
         return {
@@ -81,11 +81,11 @@ export class TFSOperationQueue {
             const completedOperations = totalOperations - this.queue.length;
             const progressPercent = Math.round((completedOperations / totalOperations) * 100);
 
-            // Report progress
+            // 报告进度
             if (this.progressCallback) {
                 const message = operation.name
-                    ? `Processing: ${operation.name} (${completedOperations}/${totalOperations})`
-                    : `Processing operation ${completedOperations}/${totalOperations}`;
+                    ? `正在处理: ${operation.name} (${completedOperations}/${totalOperations})`
+                    : `正在处理操作 ${completedOperations}/${totalOperations}`;
                 this.progressCallback(message, progressPercent);
             }
 
@@ -98,11 +98,11 @@ export class TFSOperationQueue {
         }
 
         this.processing = false;
-        this.cancelled = false; // Reset cancellation flag
+        this.cancelled = false; // 重置取消标志
 
-        // Report completion
+        // 报告完成
         if (this.progressCallback) {
-            this.progressCallback('All operations completed', 100);
+            this.progressCallback('所有操作已完成', 100);
         }
     }
 

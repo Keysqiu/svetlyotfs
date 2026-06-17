@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Changeset, PendingChange } from '../TFS/Types';  
+import { Changeset, PendingChange } from '../TFS/Types';
 import { Schemes } from './PendingChangesTreeView';
 
 export class FileHistoryTreeView implements vscode.TreeDataProvider<vscode.TreeItem> {
@@ -7,14 +7,14 @@ export class FileHistoryTreeView implements vscode.TreeDataProvider<vscode.TreeI
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | void> = this._onDidChangeTreeData.event;
 
     private static instance: FileHistoryTreeView;
-    private changesets: Changeset[] = []; 
+    private changesets: Changeset[] = [];
     private constructor() { }
-  
+
     public static getInstance(): FileHistoryTreeView {
       if (!FileHistoryTreeView.instance) {
         FileHistoryTreeView.instance = new FileHistoryTreeView();
       }
-  
+
       return FileHistoryTreeView.instance;
     }
 
@@ -27,11 +27,11 @@ export class FileHistoryTreeView implements vscode.TreeDataProvider<vscode.TreeI
             return Promise.resolve([]);
         } else {
             return Promise.resolve(this.changesets.map(cs => {
-                const label = `Changeset ${cs.changesetId}`;
+                const label = `变更集 ${cs.changesetId}`;
                 const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
-                item.description = `Changed by ${cs.user} on ${cs.date}`;
-                item.tooltip = `Changeset ${cs.changesetId}\nBy ${cs.user} on ${cs.date}\nComment: ${cs.comment}`;
-                item.resourceUri = this.toResourceUri(vscode.Uri.parse('_.'+ ''), cs as any);    
+                item.description = `由 ${cs.user} 于 ${cs.date} 更改`;
+                item.tooltip = `变更集 ${cs.changesetId}\n由 ${cs.user} 于 ${cs.date}\n备注: ${cs.comment}`;
+                item.resourceUri = this.toResourceUri(vscode.Uri.parse('_.'+ ''), cs as any);
 
                 return item;
             }));
@@ -44,7 +44,7 @@ export class FileHistoryTreeView implements vscode.TreeDataProvider<vscode.TreeI
           query: JSON.stringify(item),
         });
       }
-      
+
     public refresh(changesets: Changeset[]): void {
         this.changesets = changesets;
         this._onDidChangeTreeData.fire();

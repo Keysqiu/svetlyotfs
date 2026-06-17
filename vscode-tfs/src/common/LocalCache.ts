@@ -46,30 +46,30 @@ export class LocalCache {
         return this.context.workspaceState;
     }
 
-    // Enhanced getValue with TTL and statistics
+    // 增强的 getValue，支持 TTL 和统计
     getValue<T>(key: string): T | undefined {
         const entry = this.cache.get(key);
 
         if (entry) {
-            // Check TTL
+            // 检查 TTL
             if (entry.ttl && Date.now() - entry.timestamp > entry.ttl) {
                 this.cache.delete(key);
                 this.stats.misses++;
                 return undefined;
             }
 
-            // Update access statistics
+            // 更新访问统计
             entry.accessCount++;
             entry.lastAccessed = Date.now();
             this.stats.hits++;
             return entry.value;
         }
 
-        // Check workspace state as fallback
+        // 回退检查工作区状态
         const workspaceValue = this.getWorkspaceState().get<T>(key);
         if (workspaceValue !== undefined) {
             this.stats.hits++;
-            // Cache it locally
+            // 本地缓存
             this.setValue(key, workspaceValue);
             return workspaceValue;
         }
@@ -78,7 +78,7 @@ export class LocalCache {
         return undefined;
     }
 
-    // Enhanced setValue with TTL support
+    // 增强的 setValue，支持 TTL
     setValue<T>(key: string, value: T, ttl?: number): void {
         const entry: CacheEntry<T> = {
             value,
@@ -91,29 +91,29 @@ export class LocalCache {
         this.cache.set(key, entry);
         this.stats.sets++;
 
-        // Persist to workspace state
+        // 持久化到工作区状态
         this.getWorkspaceState().update(key, value);
 
-        // Enforce size limits
+        // 强制执行大小限制
         this.enforceSizeLimit();
     }
 
-    // Add value with optional TTL
+    // 添加值，可选 TTL
     addValue<T>(key: string, value: T, ttl?: number): void {
         this.setValue(key, value, ttl);
     }
 
-    // Get all keys
+    // 获取所有键
     getAllKeys(): string[] {
         return Array.from(this.cache.keys());
     }
 
-    // Get cache statistics
+    // 获取缓存统计
     getStats(): CacheStats {
         return { ...this.stats };
     }
 
-    // Clear expired entries
+    // 清除过期条目
     clearExpired(): number {
         let cleared = 0;
         for (const [key, entry] of this.cache.entries()) {
@@ -125,13 +125,13 @@ export class LocalCache {
         return cleared;
     }
 
-    // Clear all cache entries
+    // 清除所有缓存条目
     clear(): void {
         this.cache.clear();
         this.stats = { hits: 0, misses: 0, evictions: 0, sets: 0 };
     }
 
-    // Invalidate specific key
+    // 使特定键失效
     invalidate(key: string): boolean {
         const deleted = this.cache.delete(key);
         if (deleted) {
@@ -140,12 +140,12 @@ export class LocalCache {
         return deleted;
     }
 
-    // Get cache size
+    // 获取缓存大小
     size(): number {
         return this.cache.size;
     }
 
-    // Check if key exists and is not expired
+    // 检查键是否存在且未过期
     has(key: string): boolean {
         const entry = this.cache.get(key);
         if (!entry) return false;
@@ -161,7 +161,7 @@ export class LocalCache {
     private enforceSizeLimit(): void {
         if (this.cache.size <= this.maxSize) return;
 
-        // LRU eviction: remove least recently accessed items
+        // LRU 淘汰: 移除最近最少访问的条目
         const entries = Array.from(this.cache.entries());
         entries.sort((a, b) => a[1].lastAccessed - b[1].lastAccessed);
 
@@ -174,13 +174,13 @@ export class LocalCache {
     }
 
     private startCleanupInterval(): void {
-        // Clean up expired entries every 5 minutes
+        // 每 5 分钟清理过期条目
         this.cleanupInterval = setInterval(() => {
             this.clearExpired();
         }, 5 * 60 * 1000);
     }
 
-    // Cleanup method for extension deactivation
+    // 扩展停用时清理资源
     dispose(): void {
         if (this.cleanupInterval) {
             clearInterval(this.cleanupInterval);
@@ -190,13 +190,13 @@ export class LocalCache {
 }
 
 /**
- * High-performance LRU Cache with O(1) operations using doubly-linked list
- * Optimized for frequent access patterns typical in TFS operations
+ * 高性能 LRU 缓存，使用双向链表实现 O(1) 操作
+ * 针对 TFS 操作中常见的高频访问模式进行了优化
  */
 export class HighPerformanceLRUCache<T> {
     private cache = new Map<string, LRUCacheEntry<T>>();
-    private head: string | null = null; // Most recently used
-    private tail: string | null = null; // Least recently used
+    private head: string | null = null; // 最近使用的
+    private tail: string | null = null; // 最少使用的
     private maxSize: number;
     private stats: CacheStats = { hits: 0, misses: 0, evictions: 0, sets: 0 };
 
@@ -205,7 +205,7 @@ export class HighPerformanceLRUCache<T> {
     }
 
     /**
-     * Get value from cache with O(1) complexity
+     * 以 O(1) 复杂度从缓存中获取值
      */
     get(key: string): T | undefined {
         const entry = this.cache.get(key);
@@ -215,34 +215,34 @@ export class HighPerformanceLRUCache<T> {
             return undefined;
         }
 
-        // Check TTL
+        // 检查 TTL
         if (entry.ttl && Date.now() - entry.timestamp > entry.ttl) {
             this.delete(key);
             this.stats.misses++;
             return undefined;
         }
 
-        // Move to front (most recently used)
+        // 移到前面（最近使用）
         this.moveToFront(key);
         this.stats.hits++;
         return entry.value;
     }
 
     /**
-     * Set value in cache with O(1) complexity
+     * 以 O(1) 复杂度设置缓存值
      */
     set(key: string, value: T, ttl?: number): void {
         const now = Date.now();
 
         if (this.cache.has(key)) {
-            // Update existing entry
+            // 更新现有条目
             const entry = this.cache.get(key)!;
             entry.value = value;
             entry.timestamp = now;
             entry.ttl = ttl;
             this.moveToFront(key);
         } else {
-            // Add new entry
+            // 添加新条目
             const entry: LRUCacheEntry<T> = {
                 value,
                 prev: null,
@@ -253,7 +253,7 @@ export class HighPerformanceLRUCache<T> {
 
             this.cache.set(key, entry);
 
-            // Update linked list
+            // 更新链表
             if (this.head) {
                 this.cache.get(this.head)!.prev = key;
             }
@@ -265,7 +265,7 @@ export class HighPerformanceLRUCache<T> {
 
             this.stats.sets++;
 
-            // Enforce size limit
+            // 强制执行大小限制
             if (this.cache.size > this.maxSize) {
                 this.evictLRU();
             }
@@ -273,13 +273,13 @@ export class HighPerformanceLRUCache<T> {
     }
 
     /**
-     * Delete entry from cache
+     * 从缓存中删除条目
      */
     delete(key: string): boolean {
         const entry = this.cache.get(key);
         if (!entry) return false;
 
-        // Remove from linked list
+        // 从链表中移除
         if (entry.prev) {
             this.cache.get(entry.prev)!.next = entry.next;
         } else {
@@ -297,13 +297,13 @@ export class HighPerformanceLRUCache<T> {
     }
 
     /**
-     * Check if key exists
+     * 检查键是否存在
      */
     has(key: string): boolean {
         const entry = this.cache.get(key);
         if (!entry) return false;
 
-        // Check TTL
+        // 检查 TTL
         if (entry.ttl && Date.now() - entry.timestamp > entry.ttl) {
             this.delete(key);
             return false;
@@ -313,14 +313,14 @@ export class HighPerformanceLRUCache<T> {
     }
 
     /**
-     * Get cache size
+     * 获取缓存大小
      */
     size(): number {
         return this.cache.size;
     }
 
     /**
-     * Clear all entries
+     * 清除所有条目
      */
     clear(): void {
         this.cache.clear();
@@ -330,14 +330,14 @@ export class HighPerformanceLRUCache<T> {
     }
 
     /**
-     * Get cache statistics
+     * 获取缓存统计
      */
     getStats(): CacheStats {
         return { ...this.stats };
     }
 
     /**
-     * Get hit rate
+     * 获取命中率
      */
     getHitRate(): number {
         const total = this.stats.hits + this.stats.misses;
@@ -345,7 +345,7 @@ export class HighPerformanceLRUCache<T> {
     }
 
     /**
-     * Clean expired entries
+     * 清理过期条目
      */
     cleanExpired(): number {
         let cleaned = 0;
@@ -369,9 +369,9 @@ export class HighPerformanceLRUCache<T> {
     private moveToFront(key: string): void {
         const entry = this.cache.get(key)!;
 
-        if (key === this.head) return; // Already at front
+        if (key === this.head) return; // 已经在最前面
 
-        // Remove from current position
+        // 从当前位置移除
         if (entry.prev) {
             this.cache.get(entry.prev)!.next = entry.next;
         }
@@ -382,7 +382,7 @@ export class HighPerformanceLRUCache<T> {
             this.tail = entry.prev;
         }
 
-        // Move to front
+        // 移到最前面
         entry.prev = null;
         entry.next = this.head;
 
@@ -406,8 +406,8 @@ export class HighPerformanceLRUCache<T> {
 }
 
 /**
- * Specialized cache for TFS status operations with intelligent TTL management
- * Automatically invalidates cache entries when files change
+ * TFS 状态操作专用缓存，具有智能 TTL 管理
+ * 当文件更改时自动使缓存条目失效
  */
 export class TFSStatusCache {
     private static instance: TFSStatusCache;
@@ -416,8 +416,8 @@ export class TFSStatusCache {
     private defaultTTL: number;
 
     private constructor() {
-        this.cache = new HighPerformanceLRUCache<any[]>(500); // Cache up to 500 status results
-        this.defaultTTL = vscode.workspace.getConfiguration('tfs').get('statusCache.ttl', 30000); // 30 seconds default
+        this.cache = new HighPerformanceLRUCache<any[]>(500); // 缓存最多 500 个状态结果
+        this.defaultTTL = vscode.workspace.getConfiguration('tfs').get('statusCache.ttl', 30000); // 默认 30 秒
         this.setupFileWatchers();
     }
 
@@ -429,7 +429,7 @@ export class TFSStatusCache {
     }
 
     /**
-     * Get cached status for a URI
+     * 获取 URI 的缓存状态
      */
     getStatus(uri: vscode.Uri): any[] | undefined {
         const key = this.getCacheKey(uri);
@@ -437,7 +437,7 @@ export class TFSStatusCache {
     }
 
     /**
-     * Set cached status for a URI with TTL
+     * 设置 URI 的缓存状态及 TTL
      */
     setStatus(uri: vscode.Uri, status: any[], ttl?: number): void {
         const key = this.getCacheKey(uri);
@@ -445,7 +445,7 @@ export class TFSStatusCache {
     }
 
     /**
-     * Invalidate cache for a specific URI
+     * 使特定 URI 的缓存失效
      */
     invalidate(uri: vscode.Uri): void {
         const key = this.getCacheKey(uri);
@@ -453,53 +453,53 @@ export class TFSStatusCache {
     }
 
     /**
-     * Invalidate cache for a directory and all its children
+     * 使目录及其所有子目录的缓存失效
      */
     invalidateDirectory(directoryUri: vscode.Uri): void {
         const directoryKey = this.getCacheKey(directoryUri);
 
-        // Find all keys that start with the directory path
+        // 找到所有以该目录路径开头的键
         const keysToDelete: string[] = [];
-        // Note: HighPerformanceLRUCache doesn't expose keys directly,
-        // so we need to track this separately or use a different approach
+        // 注意: HighPerformanceLRUCache 不直接暴露键，
+        // 所以我们需要单独跟踪或使用不同的方法
 
-        // For now, we'll clear the entire cache when directory changes
-        // TODO: Implement more granular invalidation
+        // 目前，当目录发生变化时，清除整个缓存
+        // TODO: 实现更细粒度的缓存失效
         this.cache.clear();
     }
 
     /**
-     * Get cache statistics
+     * 获取缓存统计
      */
     getStats() {
         return this.cache.getStats();
     }
 
     /**
-     * Get hit rate
+     * 获取命中率
      */
     getHitRate(): number {
         return this.cache.getHitRate();
     }
 
     /**
-     * Clear all cached status
+     * 清除所有缓存状态
      */
     clear(): void {
         this.cache.clear();
     }
 
     /**
-     * Setup file system watchers for automatic cache invalidation
+     * 设置文件系统监视器以自动使缓存失效
      */
     private setupFileWatchers(): void {
-        // Watch for file changes in the workspace
+        // 监视工作区中的文件更改
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) return;
 
         const pattern = new vscode.RelativePattern(workspaceFolder, '**/*');
 
-        // Watch for file changes
+        // 监视文件更改
         const changeWatcher = vscode.workspace.createFileSystemWatcher(pattern);
         changeWatcher.onDidChange(uri => this.invalidate(uri));
         changeWatcher.onDidCreate(uri => this.invalidate(uri));
@@ -507,7 +507,7 @@ export class TFSStatusCache {
 
         this.fileWatchers.set('changes', changeWatcher);
 
-        // Watch for directory changes
+        // 监视目录更改
         const dirPattern = new vscode.RelativePattern(workspaceFolder, '**/');
         const dirWatcher = vscode.workspace.createFileSystemWatcher(dirPattern);
         dirWatcher.onDidCreate(uri => this.invalidateDirectory(uri));
@@ -517,14 +517,14 @@ export class TFSStatusCache {
     }
 
     /**
-     * Generate cache key for URI
+     * 为 URI 生成缓存键
      */
     private getCacheKey(uri: vscode.Uri): string {
         return `tfs_status_${uri.fsPath.toLowerCase()}`;
     }
 
     /**
-     * Cleanup watchers
+     * 清理监视器
      */
     dispose(): void {
         for (const watcher of this.fileWatchers.values()) {
@@ -535,8 +535,8 @@ export class TFSStatusCache {
 }
 
 /**
- * Asynchronous file system cache for expensive file operations
- * Handles concurrent access and provides promise-based caching
+ * 异步文件系统缓存，用于昂贵的文件操作
+ * 处理并发访问并提供基于 Promise 的缓存
  */
 export class AsyncFileSystemCache {
     private static instance: AsyncFileSystemCache;
@@ -545,7 +545,7 @@ export class AsyncFileSystemCache {
     private fileWatchers = new Map<string, vscode.FileSystemWatcher>();
 
     private constructor() {
-        this.cache = new HighPerformanceLRUCache<Promise<any>>(200); // Cache promises
+        this.cache = new HighPerformanceLRUCache<Promise<any>>(200); // 缓存 Promise
         this.setupFileWatchers();
     }
 
@@ -557,25 +557,25 @@ export class AsyncFileSystemCache {
     }
 
     /**
-     * Get or compute value asynchronously with caching
+     * 异步获取或计算值，支持缓存
      */
     async getOrCompute<T>(
         key: string,
         computeFn: () => Promise<T>,
         ttl?: number
     ): Promise<T> {
-        // Check if request is already in flight
+        // 检查请求是否正在进行中
         if (this.inFlightRequests.has(key)) {
             return this.inFlightRequests.get(key)!;
         }
 
-        // Check cache
+        // 检查缓存
         const cached = this.cache.get(key);
         if (cached) {
             return cached;
         }
 
-        // Start computation
+        // 开始计算
         const promise = this.computeAndCache(key, computeFn, ttl);
         this.inFlightRequests.set(key, promise);
 
@@ -588,7 +588,7 @@ export class AsyncFileSystemCache {
     }
 
     /**
-     * Invalidate cache entry
+     * 使缓存条目失效
      */
     invalidate(key: string): void {
         this.cache.delete(key);
@@ -596,25 +596,25 @@ export class AsyncFileSystemCache {
     }
 
     /**
-     * Invalidate all entries matching a pattern
+     * 使匹配模式的所有条目失效
      */
     invalidatePattern(_pattern: RegExp): void {
-        // Note: HighPerformanceLRUCache doesn't expose keys,
-        // so we need to clear all and let them be recomputed
-        // TODO: Implement pattern-based invalidation when cache exposes keys
+        // 注意: HighPerformanceLRUCache 不暴露键，
+        // 所以需要清除全部并让它们重新计算
+        // TODO: 当缓存暴露键时实现基于模式的失效
         this.cache.clear();
         this.inFlightRequests.clear();
     }
 
     /**
-     * Get cache statistics
+     * 获取缓存统计
      */
     getStats() {
         return this.cache.getStats();
     }
 
     /**
-     * Clear all cached values
+     * 清除所有缓存值
      */
     clear(): void {
         this.cache.clear();
@@ -622,7 +622,7 @@ export class AsyncFileSystemCache {
     }
 
     /**
-     * Setup file system watchers for cache invalidation
+     * 设置文件系统监视器以进行缓存失效
      */
     private setupFileWatchers(): void {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -630,7 +630,7 @@ export class AsyncFileSystemCache {
 
         const pattern = new vscode.RelativePattern(workspaceFolder, '**/*');
 
-        // Watch for file changes
+        // 监视文件更改
         const changeWatcher = vscode.workspace.createFileSystemWatcher(pattern);
         changeWatcher.onDidChange(uri => this.invalidateByUri(uri));
         changeWatcher.onDidCreate(uri => this.invalidateByUri(uri));
@@ -640,20 +640,20 @@ export class AsyncFileSystemCache {
     }
 
     /**
-     * Invalidate cache entries related to a URI
+     * 使与 URI 相关的缓存条目失效
      */
     private invalidateByUri(uri: vscode.Uri): void {
         const path = uri.fsPath.toLowerCase();
 
-        // Invalidate entries that contain this path
-        // Since we can't iterate keys, we clear all for now
-        // TODO: Implement more sophisticated invalidation
+        // 使包含此路径的条目失效
+        // 由于无法遍历键，目前清除全部
+        // TODO: 实现更复杂的失效策略
         this.cache.clear();
         this.inFlightRequests.clear();
     }
 
     /**
-     * Compute value and cache the promise
+     * 计算值并缓存 Promise
      */
     private async computeAndCache<T>(
         key: string,
@@ -662,18 +662,18 @@ export class AsyncFileSystemCache {
     ): Promise<T> {
         try {
             const result = await computeFn();
-            // Cache the resolved promise, not the promise itself
+            // 缓存已解析的 Promise，而不是 Promise 本身
             const resolvedPromise = Promise.resolve(result);
             this.cache.set(key, resolvedPromise, ttl);
             return result;
         } catch (error) {
-            // Don't cache errors - let them be retried
+            // 不缓存错误 - 让它们可以被重试
             throw error;
         }
     }
 
     /**
-     * Cleanup resources
+     * 清理资源
      */
     dispose(): void {
         for (const watcher of this.fileWatchers.values()) {
